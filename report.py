@@ -5,7 +5,6 @@ import time
 import sqlite3
 
 def screenshot(playwright: Playwright, url) -> None:
-
     #사이트에 접근이 안되는 경우 임시로 최대 3번까지 스크린샷 시도
     try:
         browser = playwright.chromium.launch(headless=False)
@@ -101,7 +100,7 @@ def screenshot(playwright: Playwright, url) -> None:
         # pass
 
 def reporting(url, url_go):
-
+    
     try:
         reporting_url = "http://www.kocsc.or.kr/sec/rnc/iPinCert.do?preContent=+1.+%EB%AF%BC%EC%9B%90%EC%B7%A8%EC%A7%80+%0A-%0A2.+%EB%AF%BC%EC%9B%90%EB%82%B4%EC%9A%A9+%0A-&conText=%2Fmain&joinType=13&explain=true"
 

@@ -2,9 +2,11 @@ from playwright.sync_api import Playwright, sync_playwright, expect
 from selenium import webdriver
 import re
 import time
+import sqlite3
 
 def screenshot(playwright: Playwright, url) -> None:
 
+    #사이트에 접근이 안되는 경우 임시로 최대 3번까지 스크린샷 시도
     try:
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context(viewport={"width": 1440, "height": 2560})
@@ -111,24 +113,13 @@ def reporting(url, url_go):
         options.add_argument('lang=ko_KR')
         driver = webdriver.Chrome('D:\chromedriver.exe', options=options)
 
+        #양식 기입
         driver.get(reporting_url)
-
-        a = input("a:")
-
         driver.find_element_by_css_selector("#login1").send_keys("윤호")
         driver.find_element_by_css_selector("#login2").send_keys("19940220")
-
-        b = input("b:")
-
         driver.find_element_by_class_name("login-type-btn").click()
-
-        c = input("c:")
-
         driver.find_element_by_class_name("in_box.in_length150").send_keys("ghgh220@@")
         driver.find_element_by_class_name("btn_t2").click()
-
-        d = input("d:")
-
         driver.find_element_by_css_selector("#password").send_keys("ghgh220@@")
         driver.find_element_by_css_selector("#password_re").send_keys("ghgh220@@")
         driver.find_element_by_css_selector("#password_ca").send_keys("pink")
@@ -136,9 +127,6 @@ def reporting(url, url_go):
         driver.find_element_by_css_selector("#mobile3").send_keys("6391")
         driver.find_element_by_css_selector("#email1").send_keys("kyleyoon12")
         driver.find_element_by_css_selector("#email2").send_keys("gmail.com")
-
-        e = input("e:")
-
         driver.find_element_by_class_name("btn_t3").click()
         driver.find_element_by_css_selector("#url").send_keys(url)
         driver.find_element_by_css_selector("#subject").send_keys("불법유해사이트 신고합니다_", url_go)
@@ -146,16 +134,13 @@ def reporting(url, url_go):
         driver.find_element_by_css_selector("#ComFileUploader").send_keys("D:/Digital Forensics/2.저작권/8.자동신고시스템/screenshot/", url_go,".png")
         driver.find_element_by_css_selector("#agree").click()
         driver.find_element_by_css_selector("#board > div.js_tab_box.selected > p > a:nth-child(2)").click()
-
-        f = input("f:")
-
+        
+        #알람창 처리
         alert = driver.switch_to.alert
-        alert.dismiss()
-        #alert.accept()
-        #alert.accept()
-
-        time.sleep(10)
-
+        #alert.dismiss()
+        alert.accept()
+        alert.accept()
+        
         driver.close()
 
         print(url, "- reporting succeeded")
@@ -163,10 +148,18 @@ def reporting(url, url_go):
     except:
         print(url, "- reporting failed")
 
+def fetch_urls():
+    conn = sqlite3.connect("illegals.db")
+    cur = conn.cursor()
+    cur.execute("SELECT main_url from illegal_sites where site_available ='1'")
+    row = cur.fetchall()
+    url_raw = re.findall(
+        'http[s]?://(?:[a-zA-Z-ㄱ-ㅣ가-힣]|[0-9]|[$\-@\.&+:/?=_&;]|[!*\(\),]|(?:%[0-9a-fA-F-ㄱ-ㅣ가-힣][0-9a-fA-F-ㄱ-ㅣ가-힣]))+', str(row))
+
+    return url_raw
+
 def main():
-    #urls = ["https://toonkor101.com", "https://wfwf202.com"]
-    urls = ["https://toonkor101.com"]
-    #urls = ["https://wfwf202.com"]
+    urls = fetch_urls()
 
     try:
         for url in urls:

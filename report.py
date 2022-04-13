@@ -149,6 +149,7 @@ def reporting(url, url_go):
         print(url, "- reporting failed")
 
 def fetch_urls():
+    
     conn = sqlite3.connect("illegals.db")
     cur = conn.cursor()
     cur.execute("SELECT main_url from illegal_sites where site_available ='1'")

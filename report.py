@@ -159,8 +159,11 @@ def fetch_urls():
     return url_raw
 
 def main():
+    
+    #illegals.db에서 url 획득
     urls = fetch_urls()
 
+    #url별 Screenshot + Reporting
     try:
         for url in urls:
             with sync_playwright() as playwright:

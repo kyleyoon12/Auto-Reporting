@@ -35,7 +35,7 @@ def filtering(title):
                         "현재주소", "무료웹툰사이트", "먹튀검증사이트", "영화무료사이트", '링크모음', '주소']
 
     light_illegal_keywords = ['웹툰', '미리보기', '19', '유료', '무료', '망가', '인기', '만화', '썰', '순위',
-                              '다시보기', '드라마', '티비', '스트리밍', '링크', 'streaming',
+                              '다시보기', '드라마', '티비', '스트리밍', '링크', 'streaming', '실시간',
                               '최신', '주소', '토렌트', 'torrent', '줄거리', '공유', '영화', '성인', 'av', '야동', '노모', '일본', '유출', '국산', '몰카',
                               '오피', 'op', '안마', '유흥', '업소', '키스', '벗방',
                               '토토', '도박', '머니', '스포츠', '베팅', '코드', '고액', '배당', '가입', '매충', '지급', '보증', '포커', '경기', '카지노', '유럽',
@@ -132,19 +132,19 @@ def temp(playwright: Playwright, urls):
                         # title과 Site Available False 주기
                     else:
                         # True인 애들
-                        page.wait_for_timeout(15000)
+                        page.wait_for_timeout(10000)
                         sql_available_urls.append([url, title])
-                        print(">>> [Available URL]:", "Title:", title)
+                        print(">>> [Available URL] ", "Title:", title)
 
                         if 'http://' in url:
                             url_go = re.sub(pattern='http://', repl='', string=url)
                             page.screenshot(path=f'./screenshot/{url_go}.png', full_page=False)
-                            print('>>> [Screenshot Success]:', url_go)
+                            print('>>> [Screenshot Success] ', url_go)
 
                         elif 'https://' in url:
                             url_go = re.sub(pattern='https://', repl='', string=url)
                             page.screenshot(path=f'./screenshot/{url_go}.png', full_page=False)
-                            print('>>>screenshot success]:', url_go)
+                            print('>>>screenshot success] ', url_go)
 
                         accessible_illegal += 1
                         # Title, Site Available-True 입력하는 sql 코드
@@ -164,10 +164,12 @@ def temp(playwright: Playwright, urls):
                 
                 #site available 0 주는 sql 코드
 
-    for i in range(len(sql_available_urls)):
-        print("URL:", sql_available_urls[i][0], "Title:", sql_available_urls[i][1])
+    print("\n[Completed] Please check the overall statistic in below")
+    print(">>>[전체: %d]" %len(urls), "[접속불가: %d]" %unaccessible, "[비유해사이트: %d]" %accessible_not_illegal, "[유해사이트: %d]" %accessible_illegal)
 
-    print("done")
+    print("\n[List of Illegal Sites]")
+    for i in range(len(sql_available_urls)):
+        print(">>> [URL]", sql_available_urls[i][0], "[Title]", sql_available_urls[i][1])
 
 def main():
     urls = fetch_urls()

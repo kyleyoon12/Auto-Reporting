@@ -3,6 +3,10 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 import sqlite3
 import re
+from time import localtime, strftime
+
+time = localtime()
+screenshot_time = strftime('%Y-%m-%d', time)
 
 def fetch_urls():
     with sqlite3.connect("./illegals.db") as db_connection:
@@ -38,6 +42,7 @@ def fetch_expected_category(url):
             return '유해'
 
 def reporting(url, url_go):
+    print(">>> [Reporting]...")
     category = fetch_expected_category(url)
     reporting_url = "http://www.kocsc.or.kr/sec/rnc/iPinCert.do?preContent=+1.+%EB%AF%BC%EC%9B%90%EC%B7%A8%EC%A7%80+%0A-%0A2.+%EB%AF%BC%EC%9B%90%EB%82%B4%EC%9A%A9+%0A-&conText=%2Fmain&joinType=13&explain=true"
 
@@ -49,7 +54,7 @@ def reporting(url, url_go):
         'Chrome/89.0.4389.72 Mobile Safari/537.36')
     options.add_argument('lang=ko_KR')
     driver = webdriver.Chrome('D:\chromedriver.exe', options=options)
-    file_path = "C:\\Users\\taylor\\Desktop\\autoreportsystem\\filter\\filter_0427\\github\\Automation\\screenshot\\" + url_go + ".png"
+    file_path = "D:\\Digital Forensics\\2.저작권\\9.repository\\Automation\\screenshot\\" + screenshot_time + "\\" + url_go + ".png"
 
     # 양식 기입
     driver.get(reporting_url)
@@ -67,22 +72,16 @@ def reporting(url, url_go):
     driver.find_element_by_css_selector("#email2").send_keys("gmail.com")
     driver.find_element_by_class_name("btn_t3").click()
     driver.find_element_by_css_selector("#url").send_keys(url)
-   # driver.find_element_by_css_selector("#female").click()
-    # driver.find_element_by_css_selector("#subject").send_keys("[%s]유해사이트 신고합니다_" %category, url_go)
-
+    driver.find_element_by_css_selector("#subject").send_keys("[%s]유해사이트 신고합니다_" %category, url_go)
     driver.find_element_by_css_selector("#cont").send_keys("유해 " + category +"사이트 신고하오니 조치 부탁 드리겠습니다.")
-    # driver.find_element_by_css_selector("#ComFileUploader").send_keys(
-    #     "./screenshot/", url_go, ".png")
     driver.find_element(By.XPATH, '//input[@id="ComFileUploader"]').send_keys(file_path)
-    driver.find_element_by_css_selector("#agree").click()
-    driver.find_element_by_css_selector("#board > div.js_tab_box.selected > p > a:nth-child(2)").click()
+    # driver.find_element_by_css_selector("#agree").click()
+    # driver.find_element_by_css_selector("#board > div.js_tab_box.selected > p > a:nth-child(2)").click()
 
-    # 알람창 처리
-    alert = driver.switch_to.alert
-    # alert.dismiss()
-    alert.accept()
-    alert.accept()
-
+    # # 알람창 처리
+    # alert = driver.switch_to.alert
+    # alert.accept()
+    # alert.accept()
 
     driver.close()
 
@@ -115,7 +114,7 @@ def filtering(title, body):
                 cnt += 1
                 match_result.append(keyword)
 
-    print(">>> [Verification] Title:", title)
+    print(">>> [Verification]...")
     print(">>> [Result] Match Count: [%d]" % cnt, "Match With", match_result)
 
     return cnt
@@ -129,24 +128,24 @@ def run(playwright: Playwright, urls):
     accessible_illegal = 0 #status = 200 & 유해사이트인경우
 
     conn = sqlite3.connect("illegals.db")
-    for i, url in enumerate(urls):
+    for i, url in enumerate(urls[0:10]):
         try:
             print("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
             print("[%d]Checking Response on:" % (i+1), url)
-            print(">>> First Trial on:", url)
+            print(">>> [Requesting]...")
             browser = playwright.chromium.launch(headless=False)
             context = browser.new_context(viewport={"width": 1440, "height": 2560})
 
             page = context.new_page()
-            response = page.goto(url, timeout=30000)
-            print(">>> [Status]", response.status)
+            response = page.goto(url, timeout=60000)
             if response.status == 200:
-                print(">>> [Result] Success")
+                print(">>> [Result] Success! [%d]" %response.status)
                 title = page.inner_text("title")
                 body = page.inner_text("body")
                 result = filtering(title, body) #1 or 0
+                #경우의수1) status code가 200이나, 유해사이트가 아닌 경우
                 if result < 2:
-                    print(">>> [WhiteList URL] ", url)
+                    print(">>> [Legal URL]", url, "will be given FALSE")
                     accessible_not_illegal += 1
 
                     #title, siteavailable False 입력하는 sql코드
@@ -157,27 +156,28 @@ def run(playwright: Playwright, urls):
 
                     cur.execute(sql, (title, False, url))
                     conn.commit()
-
+                # 경우의수2) status code가 200이나, 유해사이트인 경우
                 else:
-                    # page.wait_for_timeout(15000)
+                    page.wait_for_timeout(3000)
                     sql_available_urls.append([url, title])
-                    print(">>> [Available URL]:", "Title:", title)
+                    print(">>> [Title]", title)
+                    print(">>> [Screnshotting]...")
 
                     if 'http://' in url:
                         url_go = re.sub(pattern='http://', repl='', string=url)
-                        page.screenshot(path=f'./screenshot/{url_go}.png', full_page=False)
-                        print('>>> [Screenshot Success]:', url_go)
+                        page.screenshot(path=f'./screenshot/{screenshot_time}/{url_go}.png', full_page=False)
+                        print('>>> [Screenshot Succeeded]:', url_go)
 
                     elif 'https://' in url:
                         url_go = re.sub(pattern='https://', repl='', string=url)
-                        page.screenshot(path=f'./screenshot/{url_go}.png', full_page=False)
-                        print('>>> [Screenshot Success]:', url_go)
+                        page.screenshot(path=f'./screenshot/{screenshot_time}/{url_go}.png', full_page=False)
+                        print('>>> [Screenshot Succeeded]:', url_go)
 
                     #report = (reporting 함수)
                     reporting(url, url_go)
 
                     try:
-                        print(">>> [Reporting Result] Reporting Succeeded: ", url)
+                        print(">>> [Reporting Succeeded]", url)
                         cur = conn.cursor()
                         sql = "UPDATE " + "illegal_sites" + " SET is_reported = ? WHERE main_url = ?"
                         cur.execute(sql, (True, url))
@@ -192,15 +192,35 @@ def run(playwright: Playwright, urls):
                     cur.execute(sql, (title, True, url))
                     conn.commit()
 
+            # 경우의수3) status code가 200이 아니어서 접속 불가한 사이트
+            else:
+                context.close()
+                browser.close()
+
+                # import traceback
+                # traceback.print_exc()
+                # pass
+
+                unaccessible += 1
+
+                print(">>> [Result] Requesting Failed! [%d]" %response.status)
+                print(">>> [Unavailable URL]", url, "will be given 'FALSE'")
+                # print("error:", e)
+
+                # site available 0 주는 sql 코드
+                cur = conn.cursor()
+                sql = " UPDATE " + "illegal_sites" + " SET site_available = ? WHERE main_url = ?"
+                cur.execute(sql, (False, url))
+                conn.commit()
+
             context.close()
             browser.close()
 
-        # except Exception as e:
+        # 경우의수4)request시 code를 뱉지 않고 error를 뱉는 경우
         except Exception as e:
 
             context.close()
             browser.close()
-
 
             import traceback
             traceback.print_exc()
@@ -208,7 +228,7 @@ def run(playwright: Playwright, urls):
 
             unaccessible += 1
 
-            print(">>> [Result] First Trial Failed")
+            print(">>> [Result] Requesting Failed")
             print(">>> [Unavailable URL]", url, "will be given 'FALSE'")
             # print("error:", e)
 
@@ -217,88 +237,6 @@ def run(playwright: Playwright, urls):
             sql = " UPDATE " + "illegal_sites" + " SET site_available = ? WHERE main_url = ?"
             cur.execute(sql, (False, url))
             conn.commit()
-
-
-
-
-            # try:
-            #     print(">>> [Result] First Trial Failed")
-            #     print(">>> Second Trial on:", url)
-            #
-            #     browser = playwright.chromium.launch(headless=False)
-            #     context = browser.new_context(viewport={"width": 1440, "height": 2560})
-            #
-            #     page = context.new_page()
-            #     page.wait_for_timeout(5000)
-            #     response = page.goto(url, timeout=60000)
-            #     print(">>> [Status]", response.status)
-            #     if response.status == 200:
-            #         title = page.inner_text("title")
-            #         body = page.inner_text("body")
-            #         result = filtering(title, body)  # 1 or 0
-            #         if result == 0:
-            #             print(">>> [WhiteList URL] ", url)
-            #             # title과 Site Available False 주기
-            #             cur = conn.cursor()
-            #             sql = " UPDATE " + "illegal_sites" + " SET title = ?, site_available = ? WHERE main_url = ?"
-            #             cur.execute(sql, (title, False, url))
-            #             conn.commit()
-            #
-            #         else:
-            #             # True인 애들
-            #             # page.wait_for_timeout(10000)
-            #             sql_available_urls.append([url, title])
-            #             print(">>> [Available URL] ", "Title:", title)
-            #
-            #             if 'http://' in url:
-            #                 url_go = re.sub(pattern='http://', repl='', string=url)
-            #                 page.screenshot(path=f'./screenshot/{url_go}.png', full_page=False)
-            #                 print('>>> [Screenshot Success] ', url_go)
-            #
-            #             elif 'https://' in url:
-            #                 url_go = re.sub(pattern='https://', repl='', string=url)
-            #                 page.screenshot(path=f'./screenshot/{url_go}.png', full_page=False)
-            #                 print('>>> [Screenshot success] ', url_go)
-            #
-            #             # reporting(url)
-            #             reporting(url, url_go)
-            #             try:
-            #                 print(">>> [Reporting Result] Reporting Succeeded: ", url)
-            #                 cur = conn.cursor()
-            #                 sql = "UPDATE " + "illegal_sites" + " SET is_reported = ? WHERE main_url = ?"
-            #                 cur.execute(sql, (True, url))
-            #                 conn.commit()
-            #             except:
-            #                 print(">>> " )
-            #
-            #
-            #             accessible_illegal += 1
-            #             # Title, Site Available-True 입력하는 sql 코드
-            #
-            #             cur = conn.cursor()
-            #             sql = " UPDATE " + "illegal_sites" + " SET title = ?, site_available = ? WHERE main_url = ?"
-            #             cur.execute(sql, (title, True, url))
-            #             conn.commit()
-            #
-            #     context.close()
-            #     browser.close()
-            #
-            # except Exception as e:
-            #     context.close()
-            #     browser.close()
-            #
-            #     unaccessible += 1
-            #
-            #     print(">>> [Result] Second Trial Failed")
-            #     print(">>> [Unavailable URL]", url, "will be given 'FALSE'")
-            #     # print("error:", e)
-            #
-            #     #site available 0 주는 sql 코드
-            #     cur = conn.cursor()
-            #     sql = " UPDATE " + "illegal_sites" + " SET site_available = ? WHERE main_url = ?"
-            #     cur.execute(sql, (False, url))
-            #     conn.commit()
-
 
     print("\n[Completed] Please check the overall statistic in below")
     print(">>>[전체: %d]" %len(urls), "[접속불가: %d]" %unaccessible, "[비유해사이트: %d]" %accessible_not_illegal, "[유해사이트: %d]" %accessible_illegal)

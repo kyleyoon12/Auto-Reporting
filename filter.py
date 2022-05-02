@@ -3,7 +3,10 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 import sqlite3
 import re
+import sys
 from time import localtime, strftime
+
+
 
 time = localtime()
 screenshot_time = strftime('%Y-%m-%d', time)
@@ -54,22 +57,23 @@ def reporting(url, url_go):
         'Chrome/89.0.4389.72 Mobile Safari/537.36')
     options.add_argument('lang=ko_KR')
     driver = webdriver.Chrome('D:\chromedriver.exe', options=options)
-    file_path = "D:\\Digital Forensics\\2.저작권\\9.repository\\Automation\\screenshot\\" + screenshot_time + "\\" + url_go + ".png"
+    file_path = "C:\\Users\\taylor\\Desktop\\autoreportsystem\\filter\\filter_0427\\github\\Automation\\screenshot\\" + url_go + ".png"
 
     # 양식 기입
     driver.get(reporting_url)
-    driver.find_element_by_css_selector("#login1").send_keys("윤호")
-    driver.find_element_by_css_selector("#login2").send_keys("19940220")
+    driver.find_element_by_css_selector("#login1").send_keys("김민지")
+    driver.find_element_by_css_selector("#login2").send_keys("19961101")
     driver.find_element_by_class_name("login-type-btn").click()
-    driver.find_element_by_class_name("in_box.in_length150").send_keys("ghgh220@@")
+    driver.find_element_by_class_name("in_box.in_length150").send_keys("taylor1101@@")
     driver.find_element_by_class_name("btn_t2").click()
-    driver.find_element_by_css_selector("#password").send_keys("ghgh220@@")
-    driver.find_element_by_css_selector("#password_re").send_keys("ghgh220@@")
-    driver.find_element_by_css_selector("#password_ca").send_keys("pink")
-    driver.find_element_by_css_selector("#mobile2").send_keys("6394")
-    driver.find_element_by_css_selector("#mobile3").send_keys("6391")
-    driver.find_element_by_css_selector("#email1").send_keys("kyleyoon12")
+    driver.find_element_by_css_selector("#password").send_keys("taylor1101@@")
+    driver.find_element_by_css_selector("#password_re").send_keys("taylor1101@@")
+    driver.find_element_by_css_selector("#password_ca").send_keys("blue")
+    driver.find_element_by_css_selector("#mobile2").send_keys("9165")
+    driver.find_element_by_css_selector("#mobile3").send_keys("0864")
+    driver.find_element_by_css_selector("#email1").send_keys("johnnytaylor1101")
     driver.find_element_by_css_selector("#email2").send_keys("gmail.com")
+    driver.find_element(By.XPATH, '// *[@id="female"]').click()
     driver.find_element_by_class_name("btn_t3").click()
     driver.find_element_by_css_selector("#url").send_keys(url)
     driver.find_element_by_css_selector("#subject").send_keys("[%s]유해사이트 신고합니다_" %category, url_go)
@@ -103,6 +107,45 @@ def filtering(title, body):
         return cnt
     elif '판매용입니다' in title:
         return cnt
+    elif title == '네이버 웹툰':
+        return cnt
+    elif title == '카카오웹툰 - KAKAO WEBTOON':
+        return cnt
+    elif title == '레진코믹스 - 솔직한 재미 대폭발':
+        return cnt
+    elif title == ' 탑툰':
+        return cnt
+    elif title == '투믹스':
+        return cnt
+    elif title == '봄툰':
+        return cnt
+    elif title == '코미코':
+        return cnt
+    elif title == '미스터블루 - 웹툰, 만화, 소설':
+        return cnt
+    elif title == '피너툰':
+        return cnt
+    elif title == '버프툰':
+        return cnt
+    elif title == 'e북포털 북큐브':
+        return cnt
+    elif title == '무툰 - 무협,액션 특화 웹툰,만화,소설!':
+        return cnt
+    elif title == '딜리헙':
+        return cnt
+    elif title == '포스타입 - POSTYPE':
+        return cnt
+    elif title == '딜리헙':
+        return cnt
+    elif title == '애니툰':
+        return cnt
+    elif title == '온에어 | iMBC':
+        return cnt
+    elif title == 'SBS 라이브 : 채널 리스트':
+        return cnt
+    elif title == 'LIVE | 디지털 KBS':
+        return cnt
+
 
     for keyword in light_illegal_keywords:
         if keyword in title:
@@ -246,10 +289,17 @@ def run(playwright: Playwright, urls):
         print(">>> [URL]", sql_available_urls[i][0], "[Title]", sql_available_urls[i][1])
 
 def main():
+
+    # stdoutOrigin = sys.stdout
+    # sys.stdout = open('./log/' + screenshot_time + "_log.txt", "w")
+
     urls = fetch_urls()
 
     with sync_playwright() as playwright:
         run(playwright, urls)
+
+    # sys.stdout.close()
+    # sys.stdout = stdoutOrigin
 
 if __name__ == '__main__':
     main()

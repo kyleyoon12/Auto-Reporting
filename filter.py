@@ -57,7 +57,7 @@ def reporting(url, url_go):
         'Chrome/89.0.4389.72 Mobile Safari/537.36')
     options.add_argument('lang=ko_KR')
     driver = webdriver.Chrome('D:\chromedriver.exe', options=options)
-    file_path = "C:\\Users\\taylor\\Desktop\\autoreportsystem\\filter\\filter_0427\\github\\Automation\\screenshot\\" + url_go + ".png"
+    file_path = "D:\\Crawler\\2022_Copyright_Crawler\\screenshot" + url_go + ".png"
 
     # 양식 기입
     driver.get(reporting_url)
@@ -79,13 +79,13 @@ def reporting(url, url_go):
     driver.find_element_by_css_selector("#subject").send_keys("[%s]유해사이트 신고합니다_" %category, url_go)
     driver.find_element_by_css_selector("#cont").send_keys("유해 " + category +"사이트 신고하오니 조치 부탁 드리겠습니다.")
     driver.find_element(By.XPATH, '//input[@id="ComFileUploader"]').send_keys(file_path)
-    # driver.find_element_by_css_selector("#agree").click()
-    # driver.find_element_by_css_selector("#board > div.js_tab_box.selected > p > a:nth-child(2)").click()
+    driver.find_element_by_css_selector("#agree").click()
+    driver.find_element_by_css_selector("#board > div.js_tab_box.selected > p > a:nth-child(2)").click()
 
-    # # 알람창 처리
-    # alert = driver.switch_to.alert
-    # alert.accept()
-    # alert.accept()
+    # 알람창 처리
+    alert = driver.switch_to.alert
+    alert.accept()
+    alert.accept()
 
     driver.close()
 
@@ -106,6 +106,8 @@ def filtering(title, body):
     if title == '불법·유해정보사이트에 대한 차단 안내':
         return cnt
     elif '판매용입니다' in title:
+        return cnt
+    elif '호스팅' in title:
         return cnt
     elif title == '네이버 웹툰':
         return cnt
@@ -171,7 +173,7 @@ def run(playwright: Playwright, urls):
     accessible_illegal = 0 #status = 200 & 유해사이트인경우
 
     conn = sqlite3.connect("illegals.db")
-    for i, url in enumerate(urls[0:10]):
+    for i, url in enumerate(urls):
         try:
             print("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
             print("[%d]Checking Response on:" % (i+1), url)
@@ -290,16 +292,16 @@ def run(playwright: Playwright, urls):
 
 def main():
 
-    # stdoutOrigin = sys.stdout
-    # sys.stdout = open('./log/' + screenshot_time + "_log.txt", "w")
+    stdoutOrigin = sys.stdout
+    sys.stdout = open('./log/' + screenshot_time + "_log.txt", "w")
 
     urls = fetch_urls()
 
     with sync_playwright() as playwright:
         run(playwright, urls)
 
-    # sys.stdout.close()
-    # sys.stdout = stdoutOrigin
+    sys.stdout.close()
+    sys.stdout = stdoutOrigin
 
 if __name__ == '__main__':
     main()
